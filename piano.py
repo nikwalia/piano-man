@@ -57,43 +57,19 @@ def create_terrain(world, width, length):
 def show_env():
     print("something")
     world = WorldModel()
+    terrain = create_terrain(world, 5, 5)
     #file="sr_common-melodic-devel/sr_description/mujoco_models/urdfs/shadowhand_motor.urdf"
-    robot = RobotModel()
-    robot = robot.loadFile("sr_common-melodic-devel/sr_description/mujoco_models/urdfs/shadowhand_motor.urdf")
+    # robot = RobotModel()
+    # robot = robot.loadFile("sr_common-melodic-devel/sr_description/mujoco_models/urdfs/shadowhand_motor")
     status = world.readFile("world.xml")
     if not status:
         print("file not read")
         exit(-1)
     vis.add("world", world)
     #shelf = make_shelf(world, 0.5, 0.5, 0.5)
-    terrain = create_terrain(world, 5, 5)
-    vis.run()
     
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    # cam = vis.camera.free()
+    vis.run()
 
 if __name__=='__main__':
     show_env()
-    
-    
