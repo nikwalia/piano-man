@@ -108,9 +108,8 @@ def create_terrain(world, width, length):
     return terrain
 
 def show_env():
-    print("something")
     world = WorldModel()
-    terrain = create_terrain(world, 5, 5)
+    # terrain = create_terrain(world, 5, 5)
     #file="sr_common-melodic-devel/sr_description/mujoco_models/urdfs/shadowhand_motor.urdf"
     # robot = RobotModel()
     # robot = robot.loadFile("sr_common-melodic-devel/sr_description/mujoco_models/urdfs/shadowhand_motor")
@@ -121,10 +120,20 @@ def show_env():
     vis.add("world", world)
     #shelf = make_shelf(world, 0.5, 0.5, 0.5)
     piano_scale = 0.25
-    keys, black_keys = make_piano(world, piano_scale)
-    vis.add("white_keys", keys)
-    vis.add("black_keys", black_keys)
+    # keys, black_keys = make_piano(world, piano_scale)
+    # vis.add("white_keys", keys)
+    # vis.add("black_keys", black_keys)
     # cam = vis.camera.free()
+
+    link_names = ['ra_base_link', 'ra_shoulder_link', 'ra_upper_arm_link',\
+                    'ra_forearm_link', 'ra_wrist_1_link', 'ra_wrist_2_link', 'ra_wrist_3_link']
+
+    robot = world.robot(0)
+    flipyz = so3.rotation([1,0,0], math.pi / 2)
+    for i in range(robot.numLinks()):
+        if robot.link(i).getName() in link_names:
+            robot.link(i).geometry().transform(flipyz,[0,0,0])
+
     vis.run()
 
 if __name__=='__main__':

@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?> 
 <world>
-    <robot name="Shadowhand" file="sr_common-melodic-devel/sr_description/mujoco_models/urdfs/ur10.urdf"/>
+    <robot name="Shadowhand" file="sr_common-melodic-devel/sr_description/mujoco_models/urdfs/ur10_hand.urdf"/>
 </world>
