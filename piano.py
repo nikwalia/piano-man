@@ -214,6 +214,8 @@ def getFingerLinks(robot):
     
 #To simplify some possible smaller issues, collisions between the robot and the keys won't be checked
 def not_colliding(world, robot, white_keys, black_keys):
+    if robot.selfCollides():
+        return False
     for i in range(robot.numLinks()):
         for j in range(world.numTerrains()):
             if robot.link(i).geometry().collides(world.terrain(i).geometry()) and world.terrain(i) != keys and world.terrain(i) != black_keys:
