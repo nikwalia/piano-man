@@ -1,6 +1,6 @@
 import numpy as np
 import mido
-import piano
+from piano import Piano
 
 def load_midi(file_path: str, track_id: 1):
     if file_path is None:
@@ -10,21 +10,15 @@ def load_midi(file_path: str, track_id: 1):
     return mid.tracks[track_id]
 
 class KeyAction(object):
-    def __init__(self, key_ids: list, start_time: int, end_time: int):
+    def __init__(self, key_ids: list, start_time: int, duration: int):
         self.start_time = start_time
-        self.end_time = end_time
+        self.duration = duration
         self.keys = sorted(key_ids)
         self.target_locs = []
     
-    def convert_targets(self, piano_definition: dict):
+    def convert_targets(self, piano: Piano):
         for key in self.keys:
-            if key in piano_definition['white']:
-                self.target_locs.append(piano_definition['white'][key])
-            else:
-                self.target_locs.append(piano_definition['black'][key])
-
-    def attempt_solve_ik(self, robot):
-        pass
+            self.target_locs.append(piano.get_key_target(key))
 
 def track_to_seq(track):
     actions = []
