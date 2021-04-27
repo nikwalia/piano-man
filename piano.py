@@ -2,6 +2,7 @@ from klampt import WorldModel,RobotModel,RobotModelLink,Geometry3D
 from klampt.math import vectorops,so3,se3
 from klampt.model import ik
 from klampt import vis
+from klampt.io import numpy_convert
 import math
 import numpy as np
 
@@ -109,14 +110,17 @@ def create_terrain(world, width, length):
 
 def show_env():
     world = WorldModel()
+    dup_world = WorldModel()
     # terrain = create_terrain(world, 5, 5)
     #file="sr_common-melodic-devel/sr_description/mujoco_models/urdfs/shadowhand_motor.urdf"
-    # robot = RobotModel()
-    # robot = robot.loadFile("sr_common-melodic-devel/sr_description/mujoco_models/urdfs/shadowhand_motor")
-    status = world.readFile("world.xml")
+    # main_robot = RobotModel()
+    # dup_robot = RobotModel()
+    # main_robot.loadFile("sr_common-melodic-devel/sr_description/mujoco_models/urdfs/ur10_hand.urdf")
+    # dup_robot.loadFile("sr_common-melodic-devel/sr_description/mujoco_models/urdfs/ur10_hand_flip.urdf")
+    status = dup_world.readFile("world.xml")
     if not status:
-        print("file not read")
-        exit(-1)
+       print("file not read")
+       exit(-1)
     vis.add("world", world)
     #shelf = make_shelf(world, 0.5, 0.5, 0.5)
     piano_scale = 0.25
@@ -128,11 +132,13 @@ def show_env():
     link_names = ['ra_base_link', 'ra_shoulder_link', 'ra_upper_arm_link',\
                     'ra_forearm_link', 'ra_wrist_1_link', 'ra_wrist_2_link', 'ra_wrist_3_link']
 
-    robot = world.robot(0)
-    flipyz = so3.rotation([1,0,0], math.pi / 2)
-    for i in range(robot.numLinks()):
-        if robot.link(i).getName() in link_names:
-            robot.link(i).geometry().transform(flipyz,[0,0,0])
+    main_robot = dup_world.robot('Shadowhand')
+    dup_robot = dup_world.robot('Shadowhand_dup')
+    for i in range(main_robot.numLinks()):
+        if main_robot.link(i).getName() in link_names:
+            main_robot.link(i).geometry().set(dup_robot.link(i).geometry().clone())
+    
+    world.add('Shadowhand', main_robot)
 
     vis.run()
 
