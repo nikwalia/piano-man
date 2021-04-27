@@ -124,52 +124,95 @@ def strToChords(chords):
 
 #Returns the positions for the fingers to play the keys
 def chordToKeys(world, chord, white_keys, black_keys):
-    print(white_keys.geometry().numElements())
-    print(black_keys.geometry().numElements())
-    print(chord)
+    #print(chord)
     locations = []
-    for i in range(white_keys.geometry().numElements()):
-        key = white_keys.geometry().getElement(i)
-        bb = key.getBBTight()
-        print(bb)
-        #For white keys the contact point should be closer to the end
-        #Height
-        z = max(bb[0][2], bb[1][2])
-        #Middle of key
-        x = 3 * (bb[0][0] + bb[1][0]) / 4
-        y = 3 * (bb[0][1] + bb[1][1]) / 4
-        locations.append((x,y,z))
-        break
+        
+    keysToPlay = getKeysForChord(chord)
+    for key in keysToPlay:
+        if key > 51:
+            #Black key
+            keyG = black_keys.geometry().getElement(key - 52)
+            bb = keyG.getBBTight()
+            z = max(bb[0][2], bb[1][2])
+            #Middle of key
+            x = (bb[0][0] + bb[1][0]) / 2
+            y = (bb[0][1] + bb[1][1]) / 2
+            locations.append((x,y,z))
+        else:
+            #White key
+            keyG = white_keys.geometry().getElement(key)
+            bb = keyG.getBBTight()
+            z = max(bb[0][2], bb[1][2])
+            #3/4 length of key
+            x = 3 * (bb[0][0] + bb[1][0]) / 4
+            y = 3 * (bb[0][1] + bb[1][1]) / 4
+            locations.append((x,y,z))
         
     return locations
+
+#Hard-coded table or other computation to retrieve key indices
+#For black keys, offset by 52 to distinguish the values
+def getKeysForChord(chord):
+    return None
     
 #Given the finger positions, play the chord
 #three-note chords are assumed for now
 #obj = ik.objective(robotmodellink,local=lclpt,world=wldpt)
 #Fingers will be a list of the links for the fingers
-def playChord(world, robot, fingers, locations, white_keys, black_keys, num_attempts):
+def playChord(world, robot, fingers, locations, white_keys, black_keys, num_attempts, height_offset):
     #Get the initial robot config
-    init_cf = robot.getConfig()
-    attempt_count = 0
-    #Need to find a way to calculate finger coords
-    solver = ik.IKSolver(robot)
-    for i in range(len(locations)):
-        obj = ik.objective(fingers[i],local=finger_coords[i],world=locations[i])
-        solver.add(obj1)
-    config = solver.solve()
-    while attempt_count < num_attempts and (not config or (config and not not_colliding(world, robot, white_keys, black_keys))):
-        config = solver.solve()
-        if not config:
-            print("valid position not found")
+#     init_cf = robot.getConfig()
+#     attempt_count = 0
+#     #Need to find a way to calculate finger coords
+#     solver = ik.IKSolver(robot)
+#     for i in range(len(locations)):
+#         obj = ik.objective(fingers[i],local=finger_coords[i],world=locations[i])
+#         solver.add(obj1)
+#     config = solver.solve()
+#     while attempt_count < num_attempts and (not config or (config and not not_colliding(world, robot, white_keys, black_keys))):
+#         config = solver.solve()
+#         if not config:
+#             print("valid position not found")
     
-    final_cf = robot.getConfig()
+#     final_cf = robot.getConfig()
+    def not_colliding_adj():
+        return not_colliding(world, robot, white_keys, black_keys)
     
     #Construct the motion plan for moving, descending, and ascending (move the collision checking here)
-                                            
+    #Will likely need to set activedofs later
+    init_cf = robot.getConfig()
+    finger_links = getFingerLinks(robot)
+    finger_tfs = []
+    for finger in finger_links:
+        finger_tfs.append(finger.getTransform())
+    
+    objs = []
+    for i in range(len(locations)):
+        obj = ik.objective(fingers[i],local=finger_coords[i],world=locations[i])
+        objs.append(obj)
+    status = ik.solve_global(objectives, iters=1000, numRestarts=100, feasibilityCheck=not_colliding_adj)
+    if not status:
+        print("Could not find a solution")
+        return None
+    final_cf = robot.getConfig()
+    
+    #Now get the higher coordinates using height_offset
+    
+    finger_tfs_adj = []
+    for i in range(len(locations)):
+        finger_links[i].setTransform((finger_tfs[i][0], (finger_tfs[i][1][0], finger_tfs[i][1][1], finger_tfs[i][1][2] + height_offset)))
+    above_cf = robot.getConfig()
+    
+    return RobotTrajectory(robot,milestones=[init_cf, above_cf, final_cf, above_cf])
+    
+        
                                    
         
+#Utility function, returns a list of the robot links containing the fingers
+def getFingerLinks(robot):
+    return None
     
-#To simplify some possible smalelr issues, collisions between the robot and the keys won't be checked
+#To simplify some possible smaller issues, collisions between the robot and the keys won't be checked
 def not_colliding(world, robot, white_keys, black_keys):
     for i in range(robot.numLinks()):
         for j in range(world.numTerrains()):
