@@ -11,13 +11,21 @@ from klampt.model.create import primitives
 #you will need to change this to the absolute or relative path to Klampt-examples
 KLAMPT_EXAMPLES = '../cs498ir_s2021'
 # KLAMPT_EXAMPLES = '../../../cs498ir_s2021'
-WHITE_MIDI_KEYS = [21, 23, 24, 26, 28, 29, 31, 33, 35, 36, 38, 40, 41, 43, 45, 47, 48, 50, 52, 53, 55, 57, 59, 60, 62, 64, 65, 67, 69, 71, 72, 74, 76, 77, 79, 81, 83, 84, 86, 88, 89, 91, 93, 95, 96, 98, 100, 101, 103, 105, 107, 108]
-BLACK_MIDI_KEYS = [22, 25, 27, 30, 32, 34, 37, 39, 42, 44, 46, 49, 51, 54, 56, 58, 61, 63, 66, 68, 70, 73, 75, 78, 80, 82, 85, 87, 90, 92, 94, 97, 99, 102, 104, 106]
+WHITE_MIDI_KEYS = [21, 23, 24, 26, 28, 29, 31, 33, 35, 36, 38, 40, 41, 43, 45, 47, 48, 50, 52, 53, 55,
+                    57, 59, 60, 62, 64, 65, 67, 69, 71, 72, 74, 76, 77, 79, 81, 83, 84, 86, 88, 89, 91,
+                    93, 95, 96, 98, 100, 101, 103, 105, 107, 108]
+BLACK_MIDI_KEYS = [22, 25, 27, 30, 32, 34, 37, 39, 42, 44, 46, 49, 51, 54, 56, 58, 61, 63, 66, 68, 70,
+                    73, 75, 78, 80, 82, 85, 87, 90, 92, 94, 97, 99, 102, 104, 106]
 
 
 class Piano(object):
-    #52 white keys, 36 black keys
-    #Base scale is width of piano key = 0.1 at scale 1.0
+    """
+    Represents and creates a piano with helper methods for accessing data
+    
+    52 white keys, 36 black keys
+    Base scale is width of piano key = 0.1 at scale 1.0
+    """
+    
     def __init__(self, world, scale):
         self.world = world
 
@@ -39,18 +47,26 @@ class Piano(object):
 
             black_key = self.make_black_key(i)
             if black_key:
-                black_key.translate([self.key_width * i - 1/2 * self.key_width + 1/2 * self.black_key_width, -1 * self.black_key_length, (self.key_height + 0.55) * self.scale])
+                black_key.translate([self.key_width * i - 1/2 * self.key_width + 1/2 * self.black_key_width,
+                                    -1 * self.black_key_length,
+                                    (self.key_height + 0.55) * self.scale])
                 self.piano_definition['black'][BLACK_MIDI_KEYS[black_idx]] = Geometry3D(black_key)
                 black_idx += 1
 
 
     def get_components(self):
+        """
+        Used for visualization
+        """
         keyG = self.make_component("white_keys", self.piano_definition['white'].values, (1, 1, 1))
         black_keyG = make_component("black_keys", self.piano_definition['black'].values, (0, 0, 0))
 
         return keyG, black_keyG
 
     def make_component(self, name: str, g, color: list):
+        """
+        Creates components for visualization/addition to Klampt
+        """
         model = Geometry3D()
         model.setGroup()
         for i, elem in enumerate(g):
@@ -62,6 +78,9 @@ class Piano(object):
         return modelG
 
     def make_key(self):
+        """
+        Creates a white key
+        """
         key_width = 0.1 * self.scale
         key_height = 0.1 * self.scale
         key_length = 0.6 * self.scale
@@ -71,6 +90,10 @@ class Piano(object):
         return key
 
     def make_black_key(self, index):
+        """
+        Creates a black key. May return None if there shouldn't be a black key according to grand
+        piano config
+        """
         if index % 7 == 2 or index % 7 == 5 or index == 0 or index == 51:
             return None
         key_width = 0.05 * self.scale
@@ -82,6 +105,9 @@ class Piano(object):
         return key
 
     def get_key_target(self, key_id: int):
+        """
+        Gets the actual physical target coordinates in Klampt-space.
+        """
         if key_id in self.piano_definition['white']:
             key = self.piano_definition['white'][key_id]
             bb = key.getBBTight()

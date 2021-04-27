@@ -3,6 +3,13 @@ import mido
 from piano import Piano
 
 def load_midi(file_path: str, track_id: 1):
+    """
+    Loads in a .mid file from path. Since there are potentially multiple tracks, the file will need
+    to be examined beforehand to manually select a track. Compatible only with grand piano.
+    
+    :param: file_path: path to the file on disk
+    :param: track_id: which track to load. the zeroth track is usually control and can be ignored.
+    """
     if file_path is None:
         return None
     
@@ -10,6 +17,9 @@ def load_midi(file_path: str, track_id: 1):
     return mid.tracks[track_id]
 
 class KeyAction(object):
+    """
+    Represents a note/chord being played.
+    """
     def __init__(self, key_ids: list, start_time: int, duration: int):
         self.start_time = start_time
         self.duration = duration
@@ -21,6 +31,9 @@ class KeyAction(object):
             self.target_locs.append(piano.get_key_target(key))
 
 def track_to_seq(track):
+    """
+    Converts a track to a python list of KeyActions
+    """
     actions = []
 
     running_time = 0
