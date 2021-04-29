@@ -2,6 +2,7 @@ from klampt import WorldModel,RobotModel,RobotModelLink,Geometry3D
 from klampt.math import vectorops,so3,se3
 from klampt.model import ik
 from klampt import vis
+from klampt.io import numpy_convert
 import math
 import numpy as np
 
@@ -59,7 +60,7 @@ class Piano(object):
         Used for visualization
         """
         keyG = self.make_component("white_keys", self.piano_definition['white'].values, (1, 1, 1))
-        black_keyG = make_component("black_keys", self.piano_definition['black'].values, (0, 0, 0))
+        black_keyG = self.make_component("black_keys", self.piano_definition['black'].values, (0, 0, 0))
 
         return keyG, black_keyG
 
@@ -134,39 +135,6 @@ def create_terrain(world, width, length):
     terrain.geometry().set(geo)
     return terrain
 
-def show_env():
-    world = WorldModel()
-    # terrain = create_terrain(world, 5, 5)
-    #file="sr_common-melodic-devel/sr_description/mujoco_models/urdfs/shadowhand_motor.urdf"
-    # robot = RobotModel()
-    # robot = robot.loadFile("sr_common-melodic-devel/sr_description/mujoco_models/urdfs/shadowhand_motor")
-    status = world.readFile("world.xml")
-    if not status:
-        print("file not read")
-        exit(-1)
-    vis.add("world", world)
-    #shelf = make_shelf(world, 0.5, 0.5, 0.5)
-    piano_scale = 0.25
-    piano = Piano(world, piano_scale)
-    keys, black_keys = piano.get_components()
-    vis.add("white_keys", keys)
-    vis.add("black_keys", black_keys)
-    cam = vis.camera.free()
-    locations = chordToKeys(world, "A", keys, black_keys)
-    location = locations[0]
-    vis.add("key",(location[0], location[1], location[2]))
-#     link_names = ['ra_base_link', 'ra_shoulder_link', 'ra_upper_arm_link',\
-#                     'ra_forearm_link', 'ra_wrist_1_link', 'ra_wrist_2_link', 'ra_wrist_3_link']
-
-#     robot = world.robot(0)
-#     flipyz = so3.rotation([1,0,0], math.pi / 2)
-#     for i in range(robot.numLinks()):
-#         if robot.link(i).getName() in link_names:
-#             robot.link(i).geometry().transform(flipyz,[0,0,0])
-
-    
-    vis.run()
-    
 #Motion planning
 #1 - Robot translates chord into key locations
 #2 - Robot moves to location above keys
@@ -287,7 +255,13 @@ def not_colliding(world, robot, white_keys, black_keys):
                 return False
     return True
     
-    
-
 if __name__=='__main__':
-    show_env()
+    world = WorldModel()
+    piano_scale = 0.25
+    keys, black_keys = Piano(world, piano_scale).get_components()
+
+    vis.add('white_keys', keys)
+    vis.add('black_keys', black_keys)
+
+    vis.run()
+    
