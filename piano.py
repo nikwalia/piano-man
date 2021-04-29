@@ -108,39 +108,12 @@ def create_terrain(world, width, length):
     terrain.geometry().set(geo)
     return terrain
 
-def show_env():
+if __name__=='__main__':
     world = WorldModel()
-    dup_world = WorldModel()
-    # terrain = create_terrain(world, 5, 5)
-    #file="sr_common-melodic-devel/sr_description/mujoco_models/urdfs/shadowhand_motor.urdf"
-    # main_robot = RobotModel()
-    # dup_robot = RobotModel()
-    # main_robot.loadFile("sr_common-melodic-devel/sr_description/mujoco_models/urdfs/ur10_hand.urdf")
-    # dup_robot.loadFile("sr_common-melodic-devel/sr_description/mujoco_models/urdfs/ur10_hand_flip.urdf")
-    status = dup_world.readFile("world.xml")
-    if not status:
-       print("file not read")
-       exit(-1)
-    vis.add("world", world)
-    #shelf = make_shelf(world, 0.5, 0.5, 0.5)
     piano_scale = 0.25
-    # keys, black_keys = make_piano(world, piano_scale)
-    # vis.add("white_keys", keys)
-    # vis.add("black_keys", black_keys)
-    # cam = vis.camera.free()
+    keys, black_keys = make_piano(world, piano_scale)
 
-    link_names = ['ra_base_link', 'ra_shoulder_link', 'ra_upper_arm_link',\
-                    'ra_forearm_link', 'ra_wrist_1_link', 'ra_wrist_2_link', 'ra_wrist_3_link']
-
-    main_robot = dup_world.robot('Shadowhand')
-    dup_robot = dup_world.robot('Shadowhand_dup')
-    for i in range(main_robot.numLinks()):
-        if main_robot.link(i).getName() in link_names:
-            main_robot.link(i).geometry().set(dup_robot.link(i).geometry().clone())
-    
-    world.add('Shadowhand', main_robot)
+    vis.add('white_keys', keys)
+    vis.add('black_keys', black_keys)
 
     vis.run()
-
-if __name__=='__main__':
-    show_env()
