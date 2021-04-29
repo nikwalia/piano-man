@@ -47,6 +47,7 @@ In order to have a stable development environment, install a virtual machine fro
 ## FILES/DIRECTORIES
 - `arm.py`- definitions for loading in the robot file
 - `piano.py`- definitions for a piano model to load in
+- `music_functions.py`- loads in `.mid` files and creates action sequences
 - `sr_common-melodic-devel`- contains mesh and URDF definitions, sourced from Shadowhand
 
 ## CONTRIBUTORS:
