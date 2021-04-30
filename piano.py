@@ -142,49 +142,6 @@ def create_terrain(world, width, length):
 #4 - Robot lifts hand back up
 #5 - Repeat 1-4 for remaining keys
 
-def strToChords(chords):
-    #Loop through each character in the chord string
-    for letter in chords:
-        #Get the contact locations of the keys
-        locations = chordToKeys(letter)
-        #Skip invalid characters
-        if locations == None:
-            continue
-            
-
-#Returns the positions for the fingers to play the keys
-def chordToKeys(world, chord, white_keys, black_keys):
-    #print(chord)
-    locations = []
-        
-    keysToPlay = getKeysForChord(chord)
-    for key in keysToPlay:
-        if key > 51:
-            #Black key
-            keyG = black_keys.geometry().getElement(key - 52)
-            bb = keyG.getBBTight()
-            z = max(bb[0][2], bb[1][2])
-            #Middle of key
-            x = (bb[0][0] + bb[1][0]) / 2
-            y = (bb[0][1] + bb[1][1]) / 2
-            locations.append((x,y,z))
-        else:
-            #White key
-            keyG = white_keys.geometry().getElement(key)
-            bb = keyG.getBBTight()
-            z = max(bb[0][2], bb[1][2])
-            #3/4 length of key
-            x = 3 * (bb[0][0] + bb[1][0]) / 4
-            y = 3 * (bb[0][1] + bb[1][1]) / 4
-            locations.append((x,y,z))
-        
-    return locations
-
-#Hard-coded table or other computation to retrieve key indices
-#For black keys, offset by 52 to distinguish the values
-def getKeysForChord(chord):
-    return None
-    
 #Given the finger positions, play the chord
 #three-note chords are assumed for now
 #obj = ik.objective(robotmodellink,local=lclpt,world=wldpt)

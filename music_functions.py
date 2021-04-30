@@ -24,11 +24,41 @@ class KeyAction(object):
         self.start_time = start_time
         self.duration = duration
         self.keys = sorted(key_ids)
-        self.target_locs = []
-    
+        self.target_locs = {}
+        # 0th- thumb...4th- pinkie
+        for i in range(5):
+            self.target_locs[i] = -1
+
     def convert_targets(self, piano: Piano):
-        for key in self.keys:
-            self.target_locs.append(piano.get_key_target(key))
+        # sourced from https://www.liveabout.com/piano-fingering-placement-guide-2701363#:~:text=Piano%20Chord%20Fingering&text=For%20example%2C%20a%20C%20chord,4%2D5%20is%20also%20acceptable.
+        if len(self.keys) == 5:
+            for i, key in enumerate(self.keys):
+                self.target_locs[i] = piano.get_key_target(key)
+        elif len(self.keys) == 4:
+            self.target_locs[0] = piano.get_key_target(self.keys[0])
+            self.target_locs[1] = piano.get_key_target(self.keys[1])
+            self.target_locs[3] = piano.get_key_target(self.keys[2])
+            self.target_locs[4] = piano.get_key_target(self.keys[3])
+        elif len(self.keys) == 3:
+            self.target_locs[0] = piano.get_key_target(self.keys[0])
+            self.target_locs[2] = piano.get_key_target(self.keys[1])
+            self.target_locs[4] = piano.get_key_target(self.keys[2])
+        elif len(self.keys) == 2:
+            diff = self.target_locs[1] - self.target_locs[0]
+            if diff <= 4:
+                # can use index finger
+                self.target_locs[1] = piano.get_key_target(self.keys[0])
+                self.target_locs[diff - 1] = piano.get_key_target(self.keys[1])
+            else:
+                # have to use thumb
+                self.target_locs[0] = piano.get_key_target(self.keys[0])
+                self.target_locs[4] = piano.get_key_target(self.keys[1])
+        else:
+            self.target_locs[1] = piano.get_key_target(self.keys[0])
+    
+    def delete_targets(self):
+        for i in range(5):
+            self.target_locs[i] = -1
 
 def track_to_seq(track):
     """
