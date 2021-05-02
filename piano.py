@@ -41,6 +41,8 @@ class Piano(object):
 
         black_idx = 0
 
+        # TODO create plank underneath. this can be used to make sure the key is not being played from underneath
+
         for i in range(52):
             key = self.make_key()
             key.translate([self.key_width * i, -1 * self.key_length, 0.5 * self.scale])
