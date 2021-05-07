@@ -49,10 +49,18 @@ def play_chord(world: WorldModel, robot: RobotModel, piano: Piano, action: KeyAc
         bbox = link.geometry().getBBTight()
 
         # TODO need to find local target on fingertip
-        obj = ik.objective(link, local=get_fingertip(link), world=action.target_locs[target])
+        print(link.getTransform()[1], get_fingertip(link), action.target_locs[target])
+        obj = ik.objective(link, local=vectorops.sub(get_fingertip(link), link.getTransform()[1]), world=action.target_locs[target])
+        #finger_axis = vectorops.unit(vectorops.sub(robot.link(FINGERTIP_LINK_NAMES[2]).getTransform()[1], robot.link('ra_wrist_3_link').getTransform()[1]))
+        #obj.setAxialRotConstraint(finger_axis, [-1, 0, 0])
         objectives.append(obj)
-    
+
+    finger_axis = vectorops.unit(vectorops.sub(robot.link(FINGERTIP_LINK_NAMES[2]).getTransform()[1], robot.link('ra_wrist_3_link').getTransform()[1]))
+    obj = ik.fixed_rotation_objective(robot.link('ra_wrist_2_link'), world_axis=[-1,0,0])
+    objectives.append(obj)
+
     res = ik.solve_global(objectives, iters=100, feasibilityCheck=lambda : is_collision_free_chord(world, robot, played_keys, piano))
+    
 
     action.delete_targets()
 
@@ -75,10 +83,12 @@ def is_collision_free_chord(world: WorldModel, robot: RobotModel, playing_keys: 
         #print("Self-collision found")
         #return False
     for i in range(world.numTerrains()):
+        print(world.terrain(i).getName())
         for j in range(robot.numLinks()):
-            if robot.link(j).geometry().collides(world.terrain(i).geometry()):
+            if robot.link(j).geometry().collides(world.terrain(i).geometry()) and world.terrain(i).getName() != 'white_keys' and world.terrain(i).getName() != 'black_keys':
+                print(world.terrain(i).getName())
                 print("Terrain collision found")
-                return False
+                #return False
 
     # TODO need to add plank in piano model
     #for i in range(robot.numLinks()):

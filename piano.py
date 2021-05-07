@@ -135,7 +135,7 @@ class Piano(object):
         if key_id in self.piano_definition['white']:
             key = self.piano_definition['white'][key_id]
             bb = key.getBBTight()
-
+            print('bb0', bb[0], 'bb1', bb[1])
             # 3/4 length of key
             x = 3 * (bb[0][0] + bb[1][0]) / 4
             y = 3 * (bb[0][1] + bb[1][1]) / 4
@@ -143,6 +143,7 @@ class Piano(object):
         else:
             key = self.piano_definition['black'][key_id]
             bb = key.getBBTight()
+            print('bb0', bb[0], 'bb1', bb[1])
 
             # middle of key
             x = (bb[0][0] + bb[1][0]) / 2
@@ -150,6 +151,7 @@ class Piano(object):
 
         z = max(bb[0][2], bb[1][2])
 
+        print(x,y,z)
         return (x, y, z)
 
 def create_terrain(world, width, length):

@@ -23,13 +23,16 @@ def play_piano(world, robot, piano, actions, height_offset):
     #keys, black_keys, plank = piano
     init_cf = robot.getConfig()
     traj = RobotTrajectory(robot, milestones=[init_cf], times=[0])
+    time = 0.0
+    counter = 0
+
 
     for action in actions:
         #Form and execute motion plan
 
         #Fetch the keys being played
         keys = action.keys
-        print(keys, len(keys), type(keys))
+        #print(keys, len(keys), type(keys))
 
         #Get the config of the robot playing the chord
         played_cf = arm.play_chord(world, robot, piano, action, keys)
@@ -45,28 +48,39 @@ def play_piano(world, robot, piano, actions, height_offset):
             #Position
             r_link = robot.link(link)
             ct = r_link.getWorldPosition(r_link.getTransform()[1])
-            ft = (ct[0], ct[1], ct[2] + height_offset)
-            print(r_link.getTransform()[1])
-            print(ft)
+            ft = [ct[0], ct[1], ct[2] + height_offset]
+            #print(r_link.getTransform()[1])
+            #print(ft)
             obj = ik.objective(r_link, local=r_link.getTransform()[1], world=ft)
+            #finger_axis = vectorops.unit(vectorops.sub(robot.link(arm.FINGERTIP_LINK_NAMES[2]).getTransform()[1], robot.link('ra_wrist_3_link').getTransform()[1]))
+            #obj.setAxialRotConstraint(finger_axis, [0, 1, 0])
             objectives.append(obj)
 
         played_keys = []
         for target in action.target_locs:
             played_keys.append(target)
         
-        status = ik.solve_global(objectives, iters=100, feasibilityCheck=lambda : arm.is_collision_free_chord(world, robot, played_keys, piano))
+        status = ik.solve_global(objectives, tol=0.01, iters=100, feasibilityCheck=lambda : arm.is_collision_free_chord(world, robot, played_keys, piano))
         if not status:
             print("Unable to find successful configuration")
             return None
         ascend_cf = robot.getConfig()
 
 
-        traj = traj.concat(RobotTrajectory(robot,milestones=[ascend_cf, played_cf, ascend_cf], times=[2.0, 4.0, 6.0]), relative=True, jumpPolicy="jump")
-        break
+        traj = traj.concat(RobotTrajectory(robot,milestones=[ascend_cf, played_cf, ascend_cf], times=[time + 0.5, time + 1, time + 1.5]), relative=True, jumpPolicy="jump")
+        time += 1.5
+        counter += 1
+        if counter > 2:
+            break
 
     robot.setConfig(init_cf)
     return traj
+
+def create_terrain(world, width, length):
+    geo = primitives.box(width, length, 0.05, center=[0,0,0])
+    terrain = world.makeTerrain("floor")
+    terrain.geometry().set(geo)
+    return terrain
     
 
 def main(args):
@@ -100,6 +114,10 @@ def main(args):
     vis.add('black_keys', black_keys)
     vis.add('piano_body', plank)
 
+    #Floor
+    t = create_terrain(world, 10, 10)
+    vis.add("floor", t)
+
     #Do robot stuff
     robot = world.robot(0)
     #robot.randomizeConfig()
@@ -120,7 +138,7 @@ def main(args):
 
     def callback():
         global robot, motion_plan, start_time
-        print("callback")
+        #print("callback")
         if start_time == -1:
             return 
         ct = time.time() - start_time
@@ -129,6 +147,10 @@ def main(args):
         if ct > motion_plan.duration():
             start_time = -1
 
+    vis.add("point", (0.16, 0.96, 0.36), size=0.1)
+    pos = robot.link('rh_thdistal').getWorldPosition(robot.link('rh_thdistal').getMass().getCom())
+    print(pos)
+    vis.add("p2", pos, size=0.1)
     vis.loop(callback=callback)
 
 
