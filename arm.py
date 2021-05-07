@@ -35,7 +35,7 @@ def get_fingertip(link: RobotModelLink):
 
 def play_chord(world: WorldModel, robot: RobotModel, piano: Piano, action: KeyAction, playing_keys: list):
     action.convert_targets(piano)
-    
+    played_keys = []
     objectives = []
     for target in action.target_locs:
         if action.target_locs[target] == -1:
@@ -43,43 +43,57 @@ def play_chord(world: WorldModel, robot: RobotModel, piano: Piano, action: KeyAc
             # this would involve rotating those fingers and their parent links to be straight, then disabling those links
             # in ik.solve_global()
             continue
-        link = playing_keys[FINGERTIP_LINK_NAMES[target]]
+        link = robot.link(FINGERTIP_LINK_NAMES[target])
+        played_keys.append(target)
+        #link = playing_keys[FINGERTIP_LINK_NAMES[target]]
         bbox = link.geometry().getBBTight()
 
         # TODO need to find local target on fingertip
         obj = ik.objective(link, local=get_fingertip(link), world=action.target_locs[target])
         objectives.append(obj)
     
-    res = ik.solve_global(objectives, iters=100, feasibilityCheck=lambda : is_collision_free_chord(world, robot, playing_keys, piano))
+    res = ik.solve_global(objectives, iters=100, feasibilityCheck=lambda : is_collision_free_chord(world, robot, played_keys, piano))
 
     action.delete_targets()
 
     if not res:
+        print("play_chord ik unsuccessful")
         return None
 
     return robot.getConfig()
 
+def get_link_names(played_keys):
+    link_names = []
+    for finger_index in played_keys:
+        link_names.append(FINGERTIP_LINK_NAMES[finger_index])
+    return link_names
+
+
 def is_collision_free_chord(world: WorldModel, robot: RobotModel, playing_keys: list, piano: Piano):
     #TODO: you might want to fix this to ignore collisions between finger pads and the object
-    if robot.selfCollides():
-        return False
+    #if robot.selfCollides():
+        #print("Self-collision found")
+        #return False
     for i in range(world.numTerrains()):
         for j in range(robot.numLinks()):
             if robot.link(j).geometry().collides(world.terrain(i).geometry()):
+                print("Terrain collision found")
                 return False
 
     # TODO need to add plank in piano model
-    for i in range(robot.numLinks()):
-        if robot.link(i).geometry().collides(piano.plank.geometry()):
-            return False
+    #for i in range(robot.numLinks()):
+        #if robot.link(i).geometry().collides(piano.plank.geometry()):
+            #return False
     
     for i in range(robot.numLinks()):
-        if robot.link(i).getName() in FINGERTIP_LINK_NAMES[playing_keys]:
+        if robot.link(i).getName() in get_link_names(playing_keys):
             continue
         for j in range(world.numRigidObjects()):
             if robot.link(i).geometry().collides(world.rigidObject(i).geometry()):
+                print("Rigid object collision found")
                 return False
 
+    print("No collision")
     return True
 
 def load_model_world():

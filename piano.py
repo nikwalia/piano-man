@@ -27,9 +27,10 @@ class Piano(object):
     Base scale is width of piano key = 0.1 at scale 1.0
     """
     
-    def __init__(self, world, scale):
+    def __init__(self, world, scale, location):
         self.world = world
 
+        self.location = location
         self.key_width = 0.11 * scale
         self.key_height = 0.1 * scale
         self.black_key_width = 0.05 * scale
@@ -45,14 +46,16 @@ class Piano(object):
 
         for i in range(52):
             key = self.make_key()
-            key.translate([self.key_width * i, -1 * self.key_length, 0.5 * self.scale])
+            key.translate([location[0] + (self.key_width * i), 
+                            location[1] + (-1 * self.key_length), 
+                            location[2] + (0.5 * self.scale)])
             self.piano_definition['white'][WHITE_MIDI_KEYS[i]] = Geometry3D(key)
 
             black_key = self.make_black_key(i)
             if black_key:
-                black_key.translate([self.key_width * i - 1/2 * self.key_width + 1/2 * self.black_key_width,
-                                    -1 * self.black_key_length,
-                                    (self.key_height + 0.55) * self.scale])
+                black_key.translate([location[0] + (self.key_width * i - 1/2 * self.key_width + 1/2 * self.black_key_width),
+                                    location[1] + (-1 * self.black_key_length),
+                                    location[2] + ((self.key_height + 0.55) * self.scale)])
                 self.piano_definition['black'][BLACK_MIDI_KEYS[black_idx]] = Geometry3D(black_key)
                 black_idx += 1
 
@@ -61,10 +64,11 @@ class Piano(object):
         """
         Used for visualization
         """
-        keyG = self.make_component("white_keys", self.piano_definition['white'].values, (1, 1, 1))
-        black_keyG = self.make_component("black_keys", self.piano_definition['black'].values, (0, 0, 0))
+        keyG = self.make_component("white_keys", self.piano_definition['white'].values(), (1, 1, 1))
+        black_keyG = self.make_component("black_keys", self.piano_definition['black'].values(), (0, 0, 0))
+        plank = self.make_piano_body("piano_body", (89/255, 29/255, 17/255))
 
-        return keyG, black_keyG
+        return keyG, black_keyG, plank
 
     def make_component(self, name: str, g, color: list):
         """
@@ -106,6 +110,23 @@ class Piano(object):
         key.loadFile(KLAMPT_EXAMPLES+"/data/objects/cube.off")
         key.transform([key_width,0,0,0,key_length,0,0,0,key_height],[0, 0, 0])
         return key
+
+    def make_piano_body(self, name, color: list):
+        scale = self.scale
+        total_width = 0.1 * self.scale * 52 + 0.01 * self.scale * 51
+        length = 0.6 * self.scale
+        depth = 0.15 * self.scale
+        plank = Geometry3D()
+        plank.loadFile(KLAMPT_EXAMPLES+"/data/objects/cube.off")
+        plank.transform([total_width,0,0,0,length,0,0,0,depth],
+        [self.location[0] + (0),
+        self.location[1] + (-1 * length),
+        self.location[2] + (0.30 * self.scale)])
+        modelG = self.world.makeTerrain(name)
+        modelG.geometry().set(plank)
+        modelG.appearance().setColor(*color)
+        return modelG
+
 
     def get_key_target(self, key_id: int):
         """
@@ -217,10 +238,12 @@ def not_colliding(world, robot, white_keys, black_keys):
 if __name__=='__main__':
     world = WorldModel()
     piano_scale = 0.25
-    keys, black_keys = Piano(world, piano_scale).get_components()
+    location = [0, 0, 0]
+    keys, black_keys, plank = Piano(world, piano_scale, location).get_components()
 
     vis.add('white_keys', keys)
     vis.add('black_keys', black_keys)
+    vis.add('piano_body', plank)
 
     vis.run()
     
