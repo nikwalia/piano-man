@@ -30,13 +30,23 @@ def get_fingertip(link: RobotModelLink):
     pos = link.getTransform()[1]
     com = link.getWorldPosition(link.getMass().getCom())
     axis = vectorops.unit(vectorops.sub(com, pos))
-
+    print("pos", pos)
+    print("com", com)
+    print("final", vectorops.madd(pos, axis, finger_len))
     return vectorops.madd(pos, axis, finger_len)
 
-def play_chord(world: WorldModel, robot: RobotModel, piano: Piano, action: KeyAction, playing_keys: list):
+def numFingers(locs):
+    l = []
+    for loc in locs:
+        if locs[loc] != -1:
+            l.append(loc)
+    return len(l)
+
+def play_chord(world: WorldModel, robot: RobotModel, piano: Piano, action: KeyAction, playing_keys: list, height_offset):
     action.convert_targets(piano)
     played_keys = []
     objectives = []
+    print("fingers used", numFingers(action.target_locs))
     for target in action.target_locs:
         if action.target_locs[target] == -1:
             # TODO maybe there's a way to set the non-playing fingers to be straight?
@@ -49,17 +59,22 @@ def play_chord(world: WorldModel, robot: RobotModel, piano: Piano, action: KeyAc
         bbox = link.geometry().getBBTight()
 
         # TODO need to find local target on fingertip
-        print(link.getTransform()[1], get_fingertip(link), action.target_locs[target])
-        obj = ik.objective(link, local=vectorops.sub(get_fingertip(link), link.getTransform()[1]), world=action.target_locs[target])
+        #local_p = vectorops.sub(get_fingertip(link), link.getTransform()[1])
+        local_p = vectorops.sub(get_fingertip(link),link.getWorldPosition(link.getMass().getCom()))
+        world_p = action.target_locs[target]
+        asc_world = [world_p[0], world_p[1], world_p[2] + height_offset]
+        print("local point", local_p, "world point w/ height offset", asc_world)
+        obj = ik.objective(link, local=local_p, world=asc_world)
+
         #finger_axis = vectorops.unit(vectorops.sub(robot.link(FINGERTIP_LINK_NAMES[2]).getTransform()[1], robot.link('ra_wrist_3_link').getTransform()[1]))
         #obj.setAxialRotConstraint(finger_axis, [-1, 0, 0])
         objectives.append(obj)
 
     finger_axis = vectorops.unit(vectorops.sub(robot.link(FINGERTIP_LINK_NAMES[2]).getTransform()[1], robot.link('ra_wrist_3_link').getTransform()[1]))
-    obj = ik.fixed_rotation_objective(robot.link('ra_wrist_2_link'), world_axis=[-1,0,0])
+    obj = ik.fixed_rotation_objective(robot.link('rh_palm'), world_axis=[-1,0,0])
     objectives.append(obj)
 
-    res = ik.solve_global(objectives, iters=100, feasibilityCheck=lambda : is_collision_free_chord(world, robot, played_keys, piano))
+    res = ik.solve_global(objectives, iters=200, numRestarts=200, feasibilityCheck=lambda : is_collision_free_chord(world, robot, played_keys, piano))
     
 
     action.delete_targets()
@@ -69,6 +84,17 @@ def play_chord(world: WorldModel, robot: RobotModel, piano: Piano, action: KeyAc
         return None
 
     return robot.getConfig()
+
+def disable_self_collisions(robot):
+    for i in range(robot.numLinks()):
+        for j in range(robot.numLinks()):
+            if i != j:
+                robot.enableSelfCollision(i, j, False)
+
+
+def print_link_names(robot):
+    for i in range(robot.numLinks()):
+        print(robot.link(i).getName(), i)
 
 def get_link_names(played_keys):
     link_names = []
@@ -86,9 +112,10 @@ def is_collision_free_chord(world: WorldModel, robot: RobotModel, playing_keys: 
         print(world.terrain(i).getName())
         for j in range(robot.numLinks()):
             if robot.link(j).geometry().collides(world.terrain(i).geometry()) and world.terrain(i).getName() != 'white_keys' and world.terrain(i).getName() != 'black_keys':
-                print(world.terrain(i).getName())
                 print("Terrain collision found")
-                #return False
+                print("Link name", robot.link(j).getName())
+                print("Terrain name", world.terrain(i).getName())
+                return False
 
     # TODO need to add plank in piano model
     #for i in range(robot.numLinks()):

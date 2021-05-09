@@ -132,22 +132,32 @@ class Piano(object):
         """
         Gets the actual physical target coordinates in Klampt-space.
         """
+        print("KEYID", key_id)
         if key_id in self.piano_definition['white']:
+            print("White key played")
             key = self.piano_definition['white'][key_id]
             bb = key.getBBTight()
-            print('bb0', bb[0], 'bb1', bb[1])
+            print(bb)
+            #print('bb0', bb[0], 'bb1', bb[1])
             # 3/4 length of key
-            x = 3 * (bb[0][0] + bb[1][0]) / 4
-            y = 3 * (bb[0][1] + bb[1][1]) / 4
+            xl = abs(bb[0][0] - bb[1][0])
+            yl = abs(bb[0][1] - bb[1][1])
+
+            x = min(bb[0][0], bb[1][0]) + (3 * xl / 4)
+            y = min(bb[0][1], bb[1][1]) + (3 * yl / 4)
             
         else:
+            print("Black key played")
             key = self.piano_definition['black'][key_id]
             bb = key.getBBTight()
-            print('bb0', bb[0], 'bb1', bb[1])
+            #print('bb0', bb[0], 'bb1', bb[1])
 
             # middle of key
-            x = (bb[0][0] + bb[1][0]) / 2
-            y = (bb[0][1] + bb[1][1]) / 2
+            xl = abs(bb[0][0] - bb[1][0])
+            yl = abs(bb[0][1] - bb[1][1])
+
+            x = min(bb[0][0], bb[1][0]) + (1 * xl / 2)
+            y = min(bb[0][1], bb[1][1]) + (1 * yl / 2)
 
         z = max(bb[0][2], bb[1][2])
 
