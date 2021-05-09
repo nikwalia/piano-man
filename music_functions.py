@@ -2,7 +2,7 @@ import numpy as np
 import mido
 from piano import Piano
 
-def load_midi(file_path: str, track_id: 1):
+def load_midi(file_path: str, track_id=1):
     """
     Loads in a .mid file from path. Since there are potentially multiple tracks, the file will need
     to be examined beforehand to manually select a track. Compatible only with grand piano.
@@ -84,9 +84,11 @@ def track_to_seq(track):
         else:
             continue
         if len(down_keys) == len(up_keys):
+            if start_time == 0:
+                start_time = running_time + track[i].time
             actions.append(KeyAction(down_keys, start_time, duration))
 
-            running_time += track[i].time
+            running_time = start_time + duration
             down_keys = []
             up_keys = []
             start_time = 0

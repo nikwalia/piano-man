@@ -68,7 +68,7 @@ def play_piano(world, robot, piano, actions, height_offset):
     #keys, black_keys, plank = piano
     init_cf = robot.getConfig()
     traj = RobotTrajectory(robot, milestones=[init_cf], times=[0])
-    time = 0.0
+    time = actions[0].start_time / 1000
     counter = 0
 
 
@@ -117,8 +117,13 @@ def play_piano(world, robot, piano, actions, height_offset):
             print("Unable to find successful configuration")
             return None
         descend_cf = robot.getConfig()
+        print(action.start_time)
+        print(action.duration)
         
-        traj = traj.concat(RobotTrajectory(robot,milestones=[played_cf, descend_cf, played_cf], times=[time + 0.5, time + 1, time + 1.5]), relative=True, jumpPolicy="jump")
+        start_time = action.start_time / 1000
+        down_time = (action.start_time + action.duration / 2) / 1000
+        up_time = (action.start_time + action.duration) / 1000
+        traj = traj.concat(RobotTrajectory(robot,milestones=[played_cf, descend_cf, played_cf], times=[action.start_time / 1000, down_time, (action.start_time + action.duration) / 1000]), relative=False, jumpPolicy="jump")
         #time += 1.5
         counter += 1
         if counter > 9:
