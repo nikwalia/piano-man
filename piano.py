@@ -77,7 +77,6 @@ class Piano(object):
         model = Geometry3D()
         model.setGroup()
         for i, elem in enumerate(g):
-            # t = Geometry3D(elem)
             model.setElement(i, elem)
         modelG = self.world.makeTerrain(name)
         modelG.geometry().set(model)
@@ -138,7 +137,6 @@ class Piano(object):
             key = self.piano_definition['white'][key_id]
             bb = key.getBBTight()
             print(bb)
-            #print('bb0', bb[0], 'bb1', bb[1])
             # 3/4 length of key
             xl = abs(bb[0][0] - bb[1][0])
             yl = abs(bb[0][1] - bb[1][1])
@@ -150,7 +148,7 @@ class Piano(object):
             print("Black key played")
             key = self.piano_definition['black'][key_id]
             bb = key.getBBTight()
-            #print('bb0', bb[0], 'bb1', bb[1])
+
 
             # middle of key
             xl = abs(bb[0][0] - bb[1][0])
@@ -183,20 +181,6 @@ def create_terrain(world, width, length):
 #Fingers will be a list of the links for the fingers
 def playChord(world, robot, fingers, locations, white_keys, black_keys, num_attempts, height_offset):
     #Get the initial robot config
-#     init_cf = robot.getConfig()
-#     attempt_count = 0
-#     #Need to find a way to calculate finger coords
-#     solver = ik.IKSolver(robot)
-#     for i in range(len(locations)):
-#         obj = ik.objective(fingers[i],local=finger_coords[i],world=locations[i])
-#         solver.add(obj1)
-#     config = solver.solve()
-#     while attempt_count < num_attempts and (not config or (config and not not_colliding(world, robot, white_keys, black_keys))):
-#         config = solver.solve()
-#         if not config:
-#             print("valid position not found")
-    
-#     final_cf = robot.getConfig()
     def not_colliding_adj():
         return not_colliding(world, robot, white_keys, black_keys)
     
