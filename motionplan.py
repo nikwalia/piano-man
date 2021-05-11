@@ -27,7 +27,6 @@ def play_piano(world, robot, piano, actions, height_offset):
     time = actions[0].start_time / 1000
     counter = 0
 
-
     for action in actions:
         #Form and execute motion plan
 
@@ -63,16 +62,13 @@ def play_piano(world, robot, piano, actions, height_offset):
             print("Unable to find successful configuration")
             return None
         descend_cf = robot.getConfig()
-        print(action.start_time)
-        print(action.duration)
         
         start_time = action.start_time / 1000
         down_time = (action.start_time + action.duration / 2) / 1000
         up_time = (action.start_time + action.duration) / 1000
         traj = traj.concat(RobotTrajectory(robot,milestones=[played_cf, descend_cf, played_cf], times=[action.start_time / 1000, down_time, (action.start_time + action.duration) / 1000]), relative=False, jumpPolicy="jump")
         counter += 1
-        print("count", counter)
-        if counter > 9:
+        if counter > 10:
             break
 
     robot.setConfig(init_cf)
@@ -131,9 +127,7 @@ def main(args):
     base_link = robot.link('ra_base_link')
 
     #Change default robot configuration
-    printConfig(robot)
     arm.disable_self_collisions(robot)
-    arm.print_link_names(robot)
     cf = robot.getConfig()
     cf[3] = -1 * math.pi / 12
     cf[7] = 1 * math.pi
@@ -160,21 +154,8 @@ def main(args):
         if ct > motion_plan.duration():
             start_time = -1
 
-    vis.add("point", (0.16, 0.96, 0.36), size=0.1)
-    vis.add("point2", (1.217299999997745, 0.7073990103438328, 0.12159999985504373), size=15.0)
-    pos = robot.link('rh_thdistal').getWorldPosition(robot.link('rh_thdistal').getMass().getCom())
-    print(pos)
-    vis.add("p2", pos, size=0.1)
     vis.loop(callback=callback)
 
 
 if __name__=='__main__':
     main(sys.argv)
-    
-
-
-    
-
-
-
-    

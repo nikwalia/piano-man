@@ -42,8 +42,6 @@ class Piano(object):
 
         black_idx = 0
 
-        # TODO create plank underneath. this can be used to make sure the key is not being played from underneath
-
         for i in range(52):
             key = self.make_key()
             key.translate([location[0] + (self.key_width * i), 
@@ -115,14 +113,14 @@ class Piano(object):
         total_width = 0.1 * self.scale * 52 + 0.01 * self.scale * 51
         length = 0.6 * self.scale
         depth = 0.15 * self.scale
-        plank = Geometry3D()
-        plank.loadFile(KLAMPT_EXAMPLES+"/data/objects/cube.off")
-        plank.transform([total_width,0,0,0,length,0,0,0,depth],
+        self.plank = Geometry3D()
+        self.plank.loadFile(KLAMPT_EXAMPLES+"/data/objects/cube.off")
+        self.plank.transform([total_width,0,0,0,length,0,0,0,depth],
         [self.location[0] + (0),
         self.location[1] + (-1 * length),
         self.location[2] + (0.30 * self.scale)])
         modelG = self.world.makeTerrain(name)
-        modelG.geometry().set(plank)
+        modelG.geometry().set(self.plank)
         modelG.appearance().setColor(*color)
         return modelG
 
@@ -131,9 +129,7 @@ class Piano(object):
         """
         Gets the actual physical target coordinates in Klampt-space.
         """
-        print("KEYID", key_id)
         if key_id in self.piano_definition['white']:
-            print("White key played")
             key = self.piano_definition['white'][key_id]
             bb = key.getBBTight()
             print(bb)
@@ -145,10 +141,8 @@ class Piano(object):
             y = min(bb[0][1], bb[1][1]) + (3 * yl / 4)
             
         else:
-            print("Black key played")
             key = self.piano_definition['black'][key_id]
             bb = key.getBBTight()
-
 
             # middle of key
             xl = abs(bb[0][0] - bb[1][0])
@@ -159,7 +153,6 @@ class Piano(object):
 
         z = max(bb[0][2], bb[1][2])
 
-        print(x,y,z)
         return (x, y, z)
 
 def create_terrain(world, width, length):
@@ -175,62 +168,6 @@ def create_terrain(world, width, length):
 #4 - Robot lifts hand back up
 #5 - Repeat 1-4 for remaining keys
 
-#Given the finger positions, play the chord
-#three-note chords are assumed for now
-#obj = ik.objective(robotmodellink,local=lclpt,world=wldpt)
-#Fingers will be a list of the links for the fingers
-def playChord(world, robot, fingers, locations, white_keys, black_keys, num_attempts, height_offset):
-    #Get the initial robot config
-    def not_colliding_adj():
-        return not_colliding(world, robot, white_keys, black_keys)
-    
-    #Construct the motion plan for moving, descending, and ascending (move the collision checking here)
-    #Will likely need to set activedofs later
-    init_cf = robot.getConfig()
-    finger_links = getFingerLinks(robot)
-    finger_tfs = []
-    for finger in finger_links:
-        finger_tfs.append(finger.getTransform())
-    
-    objs = []
-    for i in range(len(locations)):
-        obj = ik.objective(fingers[i],local=finger_coords[i],world=locations[i])
-        objs.append(obj)
-    status = ik.solve_global(objectives, iters=1000, numRestarts=100, feasibilityCheck=not_colliding_adj)
-    if not status:
-        print("Could not find a solution")
-        return None
-    final_cf = robot.getConfig()
-    
-    #Now get the higher coordinates using height_offset
-    
-    finger_tfs_adj = []
-    for i in range(len(locations)):
-        finger_links[i].setTransform((finger_tfs[i][0], (finger_tfs[i][1][0], finger_tfs[i][1][1], finger_tfs[i][1][2] + height_offset)))
-    above_cf = robot.getConfig()
-    
-    return RobotTrajectory(robot,milestones=[init_cf, above_cf, final_cf, above_cf])
-    
-        
-                                   
-        
-#Utility function, returns a list of the robot links containing the fingers
-def getFingerLinks(robot):
-    return None
-    
-#To simplify some possible smaller issues, collisions between the robot and the keys won't be checked
-def not_colliding(world, robot, white_keys, black_keys):
-    if robot.selfCollides():
-        return False
-    for i in range(robot.numLinks()):
-        for j in range(world.numTerrains()):
-            if robot.link(i).geometry().collides(world.terrain(i).geometry()) and world.terrain(i) != keys and world.terrain(i) != black_keys:
-                return False
-        for j in range(world.numRigidObjects()):
-            if robot.link(i).geometry().collides(world.rigidObject(i).geometry()):
-                return False
-    return True
-    
 if __name__=='__main__':
     world = WorldModel()
     piano_scale = 0.25

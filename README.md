@@ -36,6 +36,7 @@ In order to have a stable development environment, install a virtual machine fro
 - `echo alias pip=pip3 >> ~/.bashrc`
 - `echo alias python=python3 >> ~/.bashrc`
 - `source ~/.bashrc`
+- `sudo apt install freeglut3-dev`
 - Clone the repo at https://github.com/krishauser/Klampt
 - Follow the build instructions at https://github.com/krishauser/Klampt/blob/master/Cpp/docs/Tutorials/Install-Linux.md. Use the "Linux, from source" sections.
 - `pip install numpy mido`
