@@ -30,9 +30,6 @@ def get_fingertip(link: RobotModelLink):
     pos = link.getTransform()[1]
     com = link.getWorldPosition(link.getMass().getCom())
     axis = vectorops.unit(vectorops.sub(com, pos))
-    print("pos", pos)
-    print("com", com)
-    print("final", vectorops.madd(pos, axis, finger_len))
     return vectorops.madd(pos, axis, finger_len)
 
 def numFingers(locs):
@@ -46,28 +43,18 @@ def play_chord(world: WorldModel, robot: RobotModel, piano: Piano, action: KeyAc
     action.convert_targets(piano)
     played_keys = []
     objectives = []
-    print("fingers used", numFingers(action.target_locs))
     for target in action.target_locs:
         if action.target_locs[target] == -1:
-            # TODO maybe there's a way to set the non-playing fingers to be straight?
-            # this would involve rotating those fingers and their parent links to be straight, then disabling those links
-            # in ik.solve_global()
             continue
         link = robot.link(FINGERTIP_LINK_NAMES[target])
         played_keys.append(target)
-        #link = playing_keys[FINGERTIP_LINK_NAMES[target]]
         bbox = link.geometry().getBBTight()
 
-        # TODO need to find local target on fingertip
-        #local_p = vectorops.sub(get_fingertip(link), link.getTransform()[1])
         local_p = vectorops.sub(get_fingertip(link),link.getWorldPosition(link.getMass().getCom()))
         world_p = action.target_locs[target]
         asc_world = [world_p[0], world_p[1], world_p[2] + height_offset]
-        print("local point", local_p, "world point w/ height offset", asc_world)
         obj = ik.objective(link, local=local_p, world=asc_world)
 
-        #finger_axis = vectorops.unit(vectorops.sub(robot.link(FINGERTIP_LINK_NAMES[2]).getTransform()[1], robot.link('ra_wrist_3_link').getTransform()[1]))
-        #obj.setAxialRotConstraint(finger_axis, [-1, 0, 0])
         objectives.append(obj)
 
     finger_axis = vectorops.unit(vectorops.sub(robot.link(FINGERTIP_LINK_NAMES[2]).getTransform()[1], robot.link('ra_wrist_3_link').getTransform()[1]))
@@ -104,33 +91,18 @@ def get_link_names(played_keys):
 
 
 def is_collision_free_chord(world: WorldModel, robot: RobotModel, playing_keys: list, piano: Piano):
-    #TODO: you might want to fix this to ignore collisions between finger pads and the object
-    #if robot.selfCollides():
-        #print("Self-collision found")
-        #return False
     for i in range(world.numTerrains()):
-        print(world.terrain(i).getName())
         for j in range(robot.numLinks()):
             if robot.link(j).geometry().collides(world.terrain(i).geometry()) and world.terrain(i).getName() != 'white_keys' and world.terrain(i).getName() != 'black_keys':
-                print("Terrain collision found")
-                print("Link name", robot.link(j).getName())
-                print("Terrain name", world.terrain(i).getName())
                 return False
 
-    # TODO need to add plank in piano model
-    #for i in range(robot.numLinks()):
-        #if robot.link(i).geometry().collides(piano.plank.geometry()):
-            #return False
-    
     for i in range(robot.numLinks()):
         if robot.link(i).getName() in get_link_names(playing_keys):
             continue
         for j in range(world.numRigidObjects()):
             if robot.link(i).geometry().collides(world.rigidObject(i).geometry()):
-                print("Rigid object collision found")
                 return False
 
-    print("No collision")
     return True
 
 def load_model_world():
