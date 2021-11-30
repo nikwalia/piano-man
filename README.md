@@ -3,6 +3,8 @@
 ## ABOUT
 Developed as a part of UIUC'S CS 498- AI For Robot Control class, this project takes in piano `.mid` files and simulates a robot playing them! Functionality includes single-hand, multi-phalanged performance.
 
+Demo video: https://www.youtube.com/watch?v=4UZ4hTDgCKQ&ab_channel=schneid2000
+
 ## SETUP
 In order to have a stable development environment, install a virtual machine from scratch. It is recommended to use a local VM with GUI attached instead of using any form of X-forwarding due to complications with library dependencies.
 
